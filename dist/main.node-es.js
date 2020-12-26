@@ -1665,8 +1665,10 @@ class MutableFile extends File {
 
     if (!opt.target) opt.target = this;
     let finalKey;
-    let key = formatKey(opt.key);
-    if (!key) key = secureRandom(24);
+    let key = formatKey(opt.key); // create a fake key in case upload ciphertext but key not provided;
+    // this fake key is sent to mega, but the real key is stored by us.
+
+    if (!key) key = opt.uploadCiphertext ? Buffer.from(secureRandom(32)) : secureRandom(24);
     if (!(key instanceof Buffer)) key = Buffer.from(key); // Ciphertext uploading only works if is `uploadCiphertext` is set to true
     // This is in case some application allowed key to be modified
     // by the users without checking the size
@@ -2276,7 +2278,6 @@ class Storage extends EventEmitter {
     options.keepalive = options.keepalive === undefined ? true : !!options.keepalive;
     options.autoload = options.autoload === undefined ? true : !!options.autoload;
     options.autologin = options.autologin === undefined ? true : !!options.autologin;
-    options.loadShareKeyOnly = options.loadShareKeyOnly === undefined ? true : !!options.loadShareKeyOnly;
     this.api = new API(options.keepalive);
     this.files = {};
     this.options = options;
@@ -2409,12 +2410,9 @@ class Storage extends EventEmitter {
 
         return shares;
       }, {});
-      console.log("this.shareKeys");
-      console.log(this.shareKeys);
-      if (!this.options.loadShareKeyOnly) response.f.forEach(file => this._importFile(file));
+      response.f.forEach(file => this._importFile(file));
       cb(null, this.mounts);
     });
-    if (this.options.loadShareKeyOnly) return;
     this.api.on('sc', arr => {
       const deleted = {};
       arr.forEach(o => {
