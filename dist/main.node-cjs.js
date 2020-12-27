@@ -1285,6 +1285,44 @@ class File extends events.EventEmitter {
     return this;
   }
 
+  downloadUrl(options, cb) {
+    if (typeof options === 'function') {
+      cb = options;
+      options = {};
+    }
+
+    if (!options) options = {};
+    const ssl = 2;
+    const req = {
+      a: 'g',
+      g: 1,
+      ssl
+    };
+
+    if (this.nodeId) {
+      req.n = this.nodeId;
+    } else if (Array.isArray(this.downloadId)) {
+      req._querystring = {
+        n: this.downloadId[0]
+      };
+      req.n = this.downloadId[1];
+    } else {
+      req.p = this.downloadId;
+    }
+
+    const cs = this.api || notLoggedApi;
+    const requestModule = options.requestModule || this.api.requestModule;
+    cs.request(req, (err, response) => {
+      if (err) return cb(err);
+
+      if (typeof response.g !== 'string' || response.g.substr(0, 4) !== 'http') {
+        return cb(Error('MEGA servers returned an invalid response, maybe caused by rate limit'));
+      }
+
+      return cb(null, response.g);
+    });
+  }
+
   download(options, cb) {
     if (typeof options === 'function') {
       cb = options;
