@@ -484,6 +484,18 @@ function constantTimeCompare(bufferA, bufferB) {
   return result === 0;
 }
 
+function xor(a, b) {
+  var length = Math.max(a.length, b.length);
+  var buffer = Buffer.allocUnsafe(length);
+
+  for (let i = 0, j = 0; i < a.length; ++i, ++j) {
+    if (j >= b.length) j = 0;
+    buffer[i] = a[i] ^ b[j];
+  }
+
+  return buffer;
+}
+
 /* RSA public key encryption/decryption
  * The following functions are (c) 2000 by John M Hanna and are
  * released under the terms of the Gnu Public License.
@@ -997,7 +1009,7 @@ const ERRORS = {
   18: 'ETEMPUNAVAIL (-18): Resource temporarily not available, please try again later'
 }; // The original MEGA package used https://g.api.mega.co.nz/
 
-const DEFAULT_GATEWAY = 'https://eu.api.mega.co.nz/';
+const DEFAULT_GATEWAY = 'https://g.api.mega.co.nz/';
 
 class API extends events.EventEmitter {
   constructor(keepalive) {
@@ -2631,5 +2643,6 @@ mega.File = File;
 mega.file = File.fromURL;
 mega.encrypt = megaEncrypt;
 mega.decrypt = megaDecrypt;
+mega.xor = xor;
 
 module.exports = mega;
